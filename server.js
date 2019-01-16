@@ -10,10 +10,11 @@
 
 const request = require("request");
 const cheerio = require("cheerio");
-
+var rp = require("request-promise");
 const Nightmare = require("nightmare");
 // const nightmare = Nightmare({ show: true });
 //
+
 var jquery = require("jquery");
 //
 const express = require("express");
@@ -55,8 +56,8 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to Article application." });
 });
 //linkdin
-app.get("/fiind/:name", (req, res) => {
-  //  request(`https://duckduckgo.com/?q=sibtain+saleem&ia=web`,
+app.get("/fiind/:name", async (req, res) => {
+  //  request(`https://www.linkedin.com/pub/dir/humera/farooq`,
   //  (error, response, html)=>{
   //   if (!error && response.statusCode == 200){
   //     const $ = cheerio.load(html);
@@ -64,7 +65,7 @@ app.get("/fiind/:name", (req, res) => {
   //         console.log('linkdein data',basic.text());
   //         res.json({'data':'aaa'})
   //   }
-  //  })
+  //  }) .profile-card image  x.querySelector("p")
 
   //make code like this below
   // const getAddress = async id => {
@@ -80,72 +81,194 @@ app.get("/fiind/:name", (req, res) => {
   //     console.error(e);
   //   }
   // }
-// important 
+  // important
   // return [...document.querySelectorAll('.w80p')]
   //       .map(el => el.innerText);
 
-  const nightmare = Nightmare({ show: true });
-  nightmare
-    .goto("https://duckduckgo.com")
-    .type("#search_form_input_homepage", `${req.params.name}`)
-    .click("#search_button_homepage")
-    .wait(".results--main")
-    .evaluate(
-       () =>{ //
-        let DATA=[];
-        for(var i=0;i<document.getElementsByClassName("result__snippet").length;i++){
-          DATA.push( {
-                  TITLE:document.getElementsByClassName("result__title")[i].innerText,
-                  Description:document.getElementsByClassName("result__snippet")[i].innerText,
-                  link:document.getElementsByClassName("result__url")[i].getAttribute("href")
-                });
-        }
-     return DATA;
-    }
-    )
-    .end()
-    .then(data => {
-      console.log(data);
-      res.send(data);
-    })
-    .catch(error => {
-      console.error("Search failed:", error);
-    });
+  // run().then((value)=>{
+  //   console.log('89',value);
+  //   res.send(value)
+  // })
+  let a = await getResult();
+  res.send(a);
+  // console.log("about to run nightmare");
+  // const nightmare = Nightmare({ show: true });
+  // nightmare
+  //   .goto("https://en-gb.facebook.com/public/zeeshan%20NAZAR")
+  //   // .type("#search_form_input_homepage", `${req.params.name}`)
+  //   // .click("#search_button_homepage")
+  //   .wait("._4-u2._58b7._4-u8")
+  //   .evaluate(() => {
+  //     //
+  //     let DATA = [];
+  //     for (
+  //       var i = 0;
+  //       i < document.getElementsByClassName("_4p2o").length;
+  //       i++
+  //     ) {
+  //       DATA.push({
+  //         TITLE: document.getElementsByClassName("_32mo")[i].innerText,
+  //         // Description: document.getElementsByClassName("result__snippet")[i]
+  //         //   .innerText,
+  //         link: document
+  //           .getElementsByClassName("_32mo")
+  //           [i].getAttribute("href")
+  //       });
+  //     }
+  //     return DATA;
+  //   })
+  //   .end()
+  //   .then(data => {
+  //     console.log(data);
+  //     res.send(data);
+  //   })
+  //   .catch(error => {
+  //     console.error("Search failed:", error);
+  //   });
+  // const nightmare = Nightmare({ show: false });
+  // nightmare
+  //   .goto("https://duckduckgo.com")
+  //   .type("#search_form_input_homepage", `${req.params.name}`)
+  //   .click("#search_button_homepage")
+  //   .wait(".results--main")
+  //   .evaluate(() => {
+  //     //
+  //     let DATA = [];
+  //     for (
+  //       var i = 0;
+  //       i < document.getElementsByClassName("result__snippet").length;
+  //       i++
+  //     ) {
+  //       DATA.push({
+  //         TITLE: document.getElementsByClassName("result__title")[i].innerText,
+  //         Description: document.getElementsByClassName("result__snippet")[i]
+  //           .innerText,
+  //         link: document
+  //           .getElementsByClassName("result__url")
+  //           [i].getAttribute("href")
+  //       });
+  //     }
+  //     return DATA;
+  //   })
+  //   .end()
+  //   .then(data => {
+  //     console.log(data);
+  //     res.send(data);
+  //   })
+  //   .catch(error => {
+  //     console.error("Search failed:", error);
+  //   });
   //`${req.params.name}`
-  
+});
+let fbdata = "";
+const GetFbData = async name => {
+  try {
+    const nightmare = Nightmare({ show: true });
+    let fbDATA = await nightmare
+      .goto("https://en-gb.facebook.com/public/zeeshan%20NAZAR")
+      .wait("._4-u2._58b7._4-u8")
+      .evaluate(() => {
+        //
+        let DATA = [];
+        for (
+          var i = 0;
+          i < document.getElementsByClassName("_4p2o").length;
+          i++
+        ) {
+          DATA.push({
+            TITLE: document.getElementsByClassName("_32mo")[i].innerText,
+            // Description: document.getElementsByClassName("result__snippet")[i]
+            //   .innerText,
+            link: document
+              .getElementsByClassName("_32mo")
+              [i].getAttribute("href")
+          });
+        }
+        return DATA;
+      });
+    await nightmare.end();
+    console.log(fbDATA, "188");
+    return fbDATA;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+nightmare = Nightmare({
+  show: true
 });
 
-const GetWebData=async (name)=>{
-  console.log('runing nightmare')
-  const nightmare = Nightmare({ show: true });
+async function run() {
+  let abc = "a";
   try {
-        await nightmare
-        .goto("https://duckduckgo.com")
-        .type("#search_form_input_homepage", `${name}`)
-        .click("#search_button_homepage")
-        .wait(".results--main")
-        .evaluate(
-           () =>{ //
-            let DATA=[];
-            for(var i=0;i<document.getElementsByClassName("result__snippet").length;i++){
-              DATA.push( {
-                      TITLE:document.getElementsByClassName("result__title")[i].innerText,
-                      Description:document.getElementsByClassName("result__snippet")[i].innerText,
-                      link:document.getElementsByClassName("result__url")[i].getAttribute("href")
-                    });
-            }
-         return DATA;
-        }
-        )
-        .end()
-        .then(data => {
-          // console.log(data);
-          return data;
-        })
-      } catch(e) {
-        console.error(e);
-      }
+    abc = await nightmare
+      .goto("https://duckduckgo.com")
+      .type("#search_form_input_homepage", "github nightmare")
+      .click("#search_button_homepage")
+      .wait("#r1-0 a.result__a")
+      .evaluate(() => {
+        return document.querySelector("#r1-0 a.result__a").href;
+      });
+
+    //queue and end the Nightmare instance along with the Electron instance it wraps
+    await nightmare.end();
+    console.log(abc, "232");
+    return abc;
+  } catch (e) {
+    console.log(e);
+  }
 }
+async function getResult() {
+  // let res = run();
+  // let resFb = GetFbData();
+  let resTwitter = twitterData();
+  let obj = {};
+  // console.log("geee",  res, "fb", await resFb);
+  // obj.link = await res;
+  // obj.fb = await resFb;
+  obj.tweet = await resTwitter;
+  console.log("obj", obj);
+  return obj;
+}
+
+const GetWebData = async name => {
+  console.log("runing nightmare");
+  const nightmare = Nightmare({ show: false });
+  try {
+    await nightmare
+      .goto("https://duckduckgo.com")
+      .type("#search_form_input_homepage", `${name}`)
+      .click("#search_button_homepage")
+      .wait(".results--main")
+      .evaluate(() => {
+        //
+        let DATA = [];
+        for (
+          var i = 0;
+          i < document.getElementsByClassName("result__snippet").length;
+          i++
+        ) {
+          DATA.push({
+            TITLE: document.getElementsByClassName("result__title")[i]
+              .innerText,
+            Description: document.getElementsByClassName("result__snippet")[i]
+              .innerText,
+            link: document
+              .getElementsByClassName("result__url")
+              [i].getAttribute("href")
+          });
+        }
+        return DATA;
+      })
+      .end()
+      .then(data => {
+        // console.log(data);
+        return data;
+      });
+  } catch (e) {
+    console.error(e);
+  }
+};
 //twitter
 app.get("/find/:name", (req, res) => {
   console.log("i am runing the server lol from a folder before");
@@ -213,6 +336,140 @@ app.get("/find/:name", (req, res) => {
     }
   );
 });
+let twitterData = async () => {
+  try {
+    let value = "1";
+    var options = {
+      uri: "https://twitter.com/search?f=users&q=zeeshan Nazar",
+      transform: function(body) {
+        return cheerio.load(body);
+      }
+    };
+  value= rp(options).then($ => {
+      // const $ = cheerio.load(html);
+      const cards = $(
+        ".fullname.ProfileNameTruncated-link.u-textInheritColor.js-nav"
+      );
+      const screenName = $(".ProfileCard-screenname");
+      let arr3 = [];
+      cards.each((i, name) => {
+        arr3.push(
+          $(name)
+            .text()
+            .replace(/\s\s+/g, "")
+        );
+      });
+      const DisplayPictures = $(".ProfileCard-avatarLink.js-nav.js-tooltip");
+      let arr2 = [];
+      DisplayPictures.map((i, pic) => {
+        arr2.push(
+          $(pic)
+            .find("img")
+            .attr("src")
+        );
+      });
+      let screenNameArray = [];
+      screenName.each((i, name) => {
+        screenNameArray.push(
+          $(name)
+            .text()
+            .replace(/\s\s+/g, "")
+        );
+      });
+      let arr = [];
+      const Bio = $(".ProfileCard-bio.u-dir");
+      //this is what we want
+      Bio.each((i, bioo) => {
+        arr.push($(bioo).text());
+      });
+      //know we dont have to separate it ...
+      // console.log(
+      //   "from line 384",
+      //   cards.text(),
+      //   "screenNAMES",
+      //   screenNameArray,
+      //   "bio",
+      //   Bio.text(),
+      //   "DISPLAY",
+      //   DisplayPictures.html()
+      // );
+      result = {
+        Fullname: arr3,
+        screenName: screenNameArray,
+        Bios: arr,
+        DisplayPictures: arr2
+      };
+      // console.log('result 399',result);
+      return result;
+    }).catch(e=>{
+      console.log(e);
+    });
+    return value;
+  } catch (e) {
+    //ending try bracket
+    console.log(e);
+  }
+  //ending function bracket
+};
+app.get("/findfb/:name", (req, res) => {
+  console.log("i am runing fb before");
+  console.log("heuheuhuhehue");
+  // res.json({'message':'hello?!??!?'});
+
+  request(
+    `https://en-gb.facebook.com/public/zeeshan%20nazar`,
+    (error, response, html) => {
+      if (!error && response.statusCode == 200) {
+        const $ = cheerio.load(html);
+        const cards = $("._4p2o").html();
+        // const screenName = $(".ProfileCard-screenname");
+        // let arr3 = [];
+        // cards.each((i, name) => {
+        //   arr3.push(
+        //     $(name)
+        //       .text()
+        //       .replace(/\s\s+/g, "")
+        //   );
+        // });
+        // const DisplayPictures = $(".ProfileCard-avatarLink.js-nav.js-tooltip");
+        // let arr2 = [];
+        // DisplayPictures.map((i, pic) => {
+        //   arr2.push(
+        //     $(pic)
+        //       .find("img")
+        //       .attr("src")
+        //   );
+        // });
+        // let screenNameArray = [];
+        // screenName.each((i, name) => {
+        //   screenNameArray.push(
+        //     $(name)
+        //       .text()
+        //       .replace(/\s\s+/g, "")
+        //   );
+        // });
+        // let arr = [];
+        // const Bio = $(".ProfileCard-bio.u-dir");
+        // //this is what we want
+        // Bio.each((i, bioo) => {
+        //   arr.push($(bioo).text());
+        // });
+        //know we dont have to separate it ...
+        console.log(
+          "from names",
+          cards,
+          "screenNAMES"
+          // screenNameArray,
+          // "bio",
+          // Bio.text(),
+          // "DISPLAY",
+          // DisplayPictures.html()
+        );
+        res.json("data sent" + $);
+      }
+    }
+  );
+});
 
 //multer stores the pictures first in /upload folder and then sends that url to our DB
 const storage = multer.diskStorage({
@@ -227,7 +484,8 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
   // reject a file
   if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
-    cb(null, true);npn
+    cb(null, true);
+    npn;
   } else {
     cb(null, false);
   }
