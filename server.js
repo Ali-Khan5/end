@@ -58,114 +58,18 @@ app.get("/", (req, res) => {
 //linkdin
 app.get("/fiind/:name", async (req, res) => {
   //  request(`https://www.linkedin.com/pub/dir/humera/farooq`,
-  //  (error, response, html)=>{
-  //   if (!error && response.statusCode == 200){
-  //     const $ = cheerio.load(html);
-  //         const basic = $("#links.results.js-results");
-  //         console.log('linkdein data',basic.text());
-  //         res.json({'data':'aaa'})
-  //   }
-  //  }) .profile-card image  x.querySelector("p")
 
-  //make code like this below
-  // const getAddress = async id => {
-  //   console.log(`Now checking ${id}`);
-  //   const nightmare = new Nightmare({ show: true });
-  // // Go to initial start page, navigate to Detail search
-  //   try {
-  //     await nightmare
-  //       .goto(START)
-  //       .wait('.bodylinkcopy:first-child')
-  //       .click('.bodylinkcopy:first-child');
-  //   } catch(e) {
-  //     console.error(e);
-  //   }
-  // }
-  // important
-  // return [...document.querySelectorAll('.w80p')]
-  //       .map(el => el.innerText);
-
-  // run().then((value)=>{
-  //   console.log('89',value);
-  //   res.send(value)
-  // })
-  let a = await getResult();
+  let a = await getResult(req.params.name);
   res.send(a);
-  // console.log("about to run nightmare");
-  // const nightmare = Nightmare({ show: true });
-  // nightmare
-  //   .goto("https://en-gb.facebook.com/public/zeeshan%20NAZAR")
-  //   // .type("#search_form_input_homepage", `${req.params.name}`)
-  //   // .click("#search_button_homepage")
-  //   .wait("._4-u2._58b7._4-u8")
-  //   .evaluate(() => {
-  //     //
-  //     let DATA = [];
-  //     for (
-  //       var i = 0;
-  //       i < document.getElementsByClassName("_4p2o").length;
-  //       i++
-  //     ) {
-  //       DATA.push({
-  //         TITLE: document.getElementsByClassName("_32mo")[i].innerText,
-  //         // Description: document.getElementsByClassName("result__snippet")[i]
-  //         //   .innerText,
-  //         link: document
-  //           .getElementsByClassName("_32mo")
-  //           [i].getAttribute("href")
-  //       });
-  //     }
-  //     return DATA;
-  //   })
-  //   .end()
-  //   .then(data => {
-  //     console.log(data);
-  //     res.send(data);
-  //   })
-  //   .catch(error => {
-  //     console.error("Search failed:", error);
-  //   });
-  // const nightmare = Nightmare({ show: false });
-  // nightmare
-  //   .goto("https://duckduckgo.com")
-  //   .type("#search_form_input_homepage", `${req.params.name}`)
-  //   .click("#search_button_homepage")
-  //   .wait(".results--main")
-  //   .evaluate(() => {
-  //     //
-  //     let DATA = [];
-  //     for (
-  //       var i = 0;
-  //       i < document.getElementsByClassName("result__snippet").length;
-  //       i++
-  //     ) {
-  //       DATA.push({
-  //         TITLE: document.getElementsByClassName("result__title")[i].innerText,
-  //         Description: document.getElementsByClassName("result__snippet")[i]
-  //           .innerText,
-  //         link: document
-  //           .getElementsByClassName("result__url")
-  //           [i].getAttribute("href")
-  //       });
-  //     }
-  //     return DATA;
-  //   })
-  //   .end()
-  //   .then(data => {
-  //     console.log(data);
-  //     res.send(data);
-  //   })
-  //   .catch(error => {
-  //     console.error("Search failed:", error);
-  //   });
-  //`${req.params.name}`
 });
 let fbdata = "";
 const GetFbData = async name => {
   try {
     const nightmare = Nightmare({ show: true });
     let fbDATA = await nightmare
-      .goto("https://en-gb.facebook.com/public/zeeshan%20NAZAR")
+      .goto(`https://en-gb.facebook.com/public/${name}`)
+      .scrollTo(1300, 0)
+      .wait(2000)
       .wait("._4-u2._58b7._4-u8")
       .evaluate(() => {
         //
@@ -181,7 +85,11 @@ const GetFbData = async name => {
             //   .innerText,
             link: document
               .getElementsByClassName("_32mo")
-              [i].getAttribute("href")
+              [i].getAttribute("href"),
+            picture: document
+              .getElementsByClassName("_1glk _6phc img")
+              [i].getAttribute("src"),
+            details: document.getElementsByClassName("_pac")[i].innerText
           });
         }
         return DATA;
@@ -218,14 +126,14 @@ async function run() {
     console.log(e);
   }
 }
-async function getResult() {
+async function getResult(name) {
   // let res = run();
-  // let resFb = GetFbData();
-  let resTwitter = twitterData();
+  let resFb = GetFbData(name);
+  let resTwitter = twitterData(name);
   let obj = {};
   // console.log("geee",  res, "fb", await resFb);
   // obj.link = await res;
-  // obj.fb = await resFb;
+  obj.fb = await resFb;
   obj.tweet = await resTwitter;
   console.log("obj", obj);
   return obj;
@@ -276,10 +184,57 @@ app.get("/find/:name", (req, res) => {
   // res.json({'message':'hello?!??!?'});
 
   request(
-    `https://twitter.com/search?f=users&q=${req.params.name}`,
+    `http://gramuser.com/search/${req.params.name}`,
     (error, response, html) => {
       if (!error && response.statusCode == 200) {
         const $ = cheerio.load(html);
+        const cardsData = $("a.timg div");
+        // const screenName = $(".ProfileCard-screenname");
+        let arr3 = [];
+        cardsData.each((i, name) => {
+          arr3.push($(name).text());
+        });
+
+        const imgs = $("a.timg");
+        let arrayOfImages = [];
+        imgs.each((i, images) => {
+          arrayOfImages.push(
+            $(images)
+              .find("img")
+              .attr("src")
+          );
+        });
+        let count = 0;
+        let ResultArray = [];
+        arr3.map((x, i) => {
+          if (x == "") {
+            ResultArray.push({
+              username: arr3[i - 3],
+              Fullname: arr3[i - 2],
+              followers: arr3[i - 1],
+              imgLink:arrayOfImages[count]
+            });
+            count++;
+          }
+        });
+        console.log('res soo far',arrayOfImages)
+         res.json(ResultArray);
+      }
+    }
+  );
+});
+let twitterData = async name => {
+  try {
+    let value = "1";
+    var options = {
+      uri: `https://twitter.com/search?f=users&q=${name}`,
+      transform: function(body) {
+        return cheerio.load(body);
+      }
+    };
+    value = rp(options)
+      .then($ => {
+        // const $ = cheerio.load(html);
         const cards = $(
           ".fullname.ProfileNameTruncated-link.u-textInheritColor.js-nav"
         );
@@ -315,95 +270,24 @@ app.get("/find/:name", (req, res) => {
         Bio.each((i, bioo) => {
           arr.push($(bioo).text());
         });
-        //know we dont have to separate it ...
-        console.log(
-          "from line 61 ",
-          cards.text(),
-          "screenNAMES",
-          screenNameArray,
-          "bio",
-          Bio.text(),
-          "DISPLAY",
-          DisplayPictures.html()
-        );
-        res.json({
-          Fullname: arr3,
-          screenName: screenNameArray,
-          Bios: arr,
-          DisplayPictures: arr2
-        });
-      }
-    }
-  );
-});
-let twitterData = async () => {
-  try {
-    let value = "1";
-    var options = {
-      uri: "https://twitter.com/search?f=users&q=zeeshan Nazar",
-      transform: function(body) {
-        return cheerio.load(body);
-      }
-    };
-  value= rp(options).then($ => {
-      // const $ = cheerio.load(html);
-      const cards = $(
-        ".fullname.ProfileNameTruncated-link.u-textInheritColor.js-nav"
-      );
-      const screenName = $(".ProfileCard-screenname");
-      let arr3 = [];
-      cards.each((i, name) => {
-        arr3.push(
-          $(name)
-            .text()
-            .replace(/\s\s+/g, "")
-        );
+
+        let FinalArray = [];
+
+        for (let i = 0; i < arr2.length; i++) {
+          let tempObj = {
+            Fullname: arr3[i],
+            screenName: screenNameArray[i],
+            Bios: arr[i],
+            DisplayPictures: arr2[i]
+          };
+          FinalArray.push(tempObj);
+        }
+        // console.log('result 399',result);
+        return FinalArray;
+      })
+      .catch(e => {
+        console.log(e);
       });
-      const DisplayPictures = $(".ProfileCard-avatarLink.js-nav.js-tooltip");
-      let arr2 = [];
-      DisplayPictures.map((i, pic) => {
-        arr2.push(
-          $(pic)
-            .find("img")
-            .attr("src")
-        );
-      });
-      let screenNameArray = [];
-      screenName.each((i, name) => {
-        screenNameArray.push(
-          $(name)
-            .text()
-            .replace(/\s\s+/g, "")
-        );
-      });
-      let arr = [];
-      const Bio = $(".ProfileCard-bio.u-dir");
-      //this is what we want
-      Bio.each((i, bioo) => {
-        arr.push($(bioo).text());
-      });
-      //know we dont have to separate it ...
-      // console.log(
-      //   "from line 384",
-      //   cards.text(),
-      //   "screenNAMES",
-      //   screenNameArray,
-      //   "bio",
-      //   Bio.text(),
-      //   "DISPLAY",
-      //   DisplayPictures.html()
-      // );
-      result = {
-        Fullname: arr3,
-        screenName: screenNameArray,
-        Bios: arr,
-        DisplayPictures: arr2
-      };
-      // console.log('result 399',result);
-      return result;
-    }).catch(e=>{
-      console.log(e);
-    });
     return value;
   } catch (e) {
     //ending try bracket
@@ -422,39 +306,7 @@ app.get("/findfb/:name", (req, res) => {
       if (!error && response.statusCode == 200) {
         const $ = cheerio.load(html);
         const cards = $("._4p2o").html();
-        // const screenName = $(".ProfileCard-screenname");
-        // let arr3 = [];
-        // cards.each((i, name) => {
-        //   arr3.push(
-        //     $(name)
-        //       .text()
-        //       .replace(/\s\s+/g, "")
-        //   );
-        // });
-        // const DisplayPictures = $(".ProfileCard-avatarLink.js-nav.js-tooltip");
-        // let arr2 = [];
-        // DisplayPictures.map((i, pic) => {
-        //   arr2.push(
-        //     $(pic)
-        //       .find("img")
-        //       .attr("src")
-        //   );
-        // });
-        // let screenNameArray = [];
-        // screenName.each((i, name) => {
-        //   screenNameArray.push(
-        //     $(name)
-        //       .text()
-        //       .replace(/\s\s+/g, "")
-        //   );
-        // });
-        // let arr = [];
-        // const Bio = $(".ProfileCard-bio.u-dir");
-        // //this is what we want
-        // Bio.each((i, bioo) => {
-        //   arr.push($(bioo).text());
-        // });
-        //know we dont have to separate it ...
+
         console.log(
           "from names",
           cards,
