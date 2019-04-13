@@ -125,18 +125,18 @@ async function run() {
 }
 async function getResult(name,workEducation) {
   // let res = run();
-  // let resFb = GetFbData(name);
-  // let resTwitter = twitterData(name);
-  // let resInstagram = InstagramData(name);
+  let resFb = GetFbData(name);
+  let resTwitter = twitterData(name);
+  let resInstagram = InstagramData(name);
   let resLinkedin=GetLinkedinData(name,workEducation);
 let resLinkedinAgain=GetLinkedinDataSecond(name,workEducation);
   let obj = {};
   // console.log("geee",  res, "fb", await resFb);
   // obj.link = await res;
   // obj.insta=await resInstagram;
-  // obj.fb = await resFb;
-  // obj.tweet = await resTwitter;
-  // obj.insta = await resInstagram;
+  obj.fb = await resFb;
+  obj.tweet = await resTwitter;
+  obj.insta = await resInstagram;
   obj.linkdinsecond=await resLinkedinAgain;
   obj.linkedin=await resLinkedin;
  obj.myLinks=GivesLinkedinLinks(await resLinkedinAgain);
@@ -357,13 +357,16 @@ const GetLinkedinDataSecond = async (name,place) => {
 
 function GivesLinkedinLinks(passedArray){
   let linkedinLink=[];
-  passedArray.map((x,i)=>{
-    console.log("x in loop ",x.link);
-    // checks if the link of the site if of linkedin.com/in and if it isnt repeating the same title because of language prefixes..
-   if(x.link.search("linkedin.com/in/")!=-1 && !containsTheSameTitle(x.TITLE,linkedinLink)){
-    linkedinLink.push(x);
-   }
-  })
+  if(Array.isArray(passedArray)){
+
+    passedArray.map((x,i)=>{
+      console.log("x in loop ",x.link);
+      // checks if the link of the site if of linkedin.com/in and if it isnt repeating the same title because of language prefixes..
+     if(x.link.search("linkedin.com/in/")!=-1 && !containsTheSameTitle(x.TITLE,linkedinLink)){
+      linkedinLink.push(x);
+     }
+    })
+  }
   console.log("linkedin links in this search so far :P ",linkedinLink);
   return linkedinLink;
 }
