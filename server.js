@@ -11,18 +11,22 @@
 const request = require("request");
 const cheerio = require("cheerio");
 var rp = require("request-promise");
-const Nightmare = require("nightmare");
-// const nightmare = Nightmare({ show: true });
+var Nightmare = require("nightmare");
+var nightmare = Nightmare({ show: false });
 //
 
 var jquery = require("jquery");
 //
+const cors = require('cors');
 const express = require("express");
 const bodyParser = require("body-parser");
 // create express app
 const app = express();
 //for our photo upload
 const multer = require("multer");
+//for cors and shit
+app.use(cors());
+// app.options('*', cors());
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -56,7 +60,7 @@ app.get("/", (req, res) => {
 app.get("/fiind/:name&:workEducation", async (req, res) => {
   //  request(`https://www.linkedin.com/pub/dir/humera/farooq`,
 
-  let a = await getResult(req.params.name,req.params.workEducation);
+  let a = await getResult(req.params.name, req.params.workEducation);
   res.send(a);
 });
 let fbdata = "";
@@ -123,13 +127,13 @@ async function run() {
     console.log(e);
   }
 }
-async function getResult(name,workEducation) {
+async function getResult(name, workEducation) {
   // let res = run();
   let resFb = GetFbData(name);
   let resTwitter = twitterData(name);
   let resInstagram = InstagramData(name);
-  let resLinkedin=GetLinkedinData(name,workEducation);
-let resLinkedinAgain=GetLinkedinDataSecond(name,workEducation);
+  let resLinkedin = GetLinkedinData(name, workEducation);
+  let resLinkedinAgain = GetLinkedinDataSecond(name, workEducation);
   let obj = {};
   // console.log("geee",  res, "fb", await resFb);
   // obj.link = await res;
@@ -137,15 +141,19 @@ let resLinkedinAgain=GetLinkedinDataSecond(name,workEducation);
   obj.fb = await resFb;
   obj.tweet = await resTwitter;
   obj.insta = await resInstagram;
-  obj.linkdinsecond=await resLinkedinAgain;
-  obj.linkedin=await resLinkedin;
- obj.myLinks=GivesLinkedinLinks(await resLinkedinAgain);
- obj.myLinkstwo=GivesLinkedinLinks(await resLinkedin);
+  obj.linkdinsecond = await resLinkedinAgain;
+  obj.linkedin = await resLinkedin;
+  obj.myLinks = GivesLinkedinLinks(await resLinkedinAgain);
+  obj.myLinkstwo = GivesLinkedinLinks(await resLinkedin);
   // console.log("obj", obj);
-  let firstName=name.split(" ");
-  let lastname=name.split(" ");
-  containsTheNameOfThePersonInTheLink(firstName[0],lastname[1],obj.myLinks);
-  containsTheNameOfThePersonInTheLink(firstName[0],lastname[1],obj.myLinkstwo);
+  let firstName = name.split(" ");
+  let lastname = name.split(" ");
+  containsTheNameOfThePersonInTheLink(firstName[0], lastname[1], obj.myLinks);
+  containsTheNameOfThePersonInTheLink(
+    firstName[0],
+    lastname[1],
+    obj.myLinkstwo
+  );
   return obj;
 }
 
@@ -154,7 +162,9 @@ const GetWebData = async name => {
   const nightmare = Nightmare({ show: true });
   try {
     await nightmare
-      .goto("https://duckduckgo.com/?q=site%3Alinkedin.com%2Fin+%22eric+bhatti%22+AND+%22gdg+kolachi%22&t=h_&ia=web")
+      .goto(
+        "https://duckduckgo.com/?q=site%3Alinkedin.com%2Fin+%22eric+bhatti%22+AND+%22gdg+kolachi%22&t=h_&ia=web"
+      )
       // .type("#search_form_input_homepage", `${name}`)
       // .click("#search_button_homepage")
       .wait(".results--main")
@@ -180,7 +190,7 @@ const GetWebData = async name => {
       })
       .end()
       .then(data => {
-         console.log(data);
+        console.log(data);
         return data;
       });
   } catch (e) {
@@ -257,7 +267,7 @@ app.get("/find/:name", (req, res) => {
       .scrollTo(800, 0)
       .wait(2000)
       .wait(".content")
-      
+
       .end()
       .then(function(result) {
         console.log(result);
@@ -270,18 +280,20 @@ app.get("/find/:name", (req, res) => {
   }
 });
 
-const GetLinkedinData = async (name,place) => {
+const GetLinkedinData = async (name, place) => {
   try {
     const nightmare = Nightmare({ show: true });
     let LIDATA = await nightmare
-    // .goto("https://pk.linkedin.com/")
-    // .type(".same-name-search > :nth-child(2)", "humera")
-    // .type(".same-name-search > :nth-child(3)", "farooq")
-    // .click(".submit-btn")
-    // .scrollTo(800, 0)
-    // .wait(2000)
-    // .wait(".content")
-    .goto(`https://duckduckgo.com/?q=site%3Alinkedin.com%2Fin+%22${name}%22+AND+%22${place}%22&t=h_&ia=web`)
+      // .goto("https://pk.linkedin.com/")
+      // .type(".same-name-search > :nth-child(2)", "humera")
+      // .type(".same-name-search > :nth-child(3)", "farooq")
+      // .click(".submit-btn")
+      // .scrollTo(800, 0)
+      // .wait(2000)
+      // .wait(".content")
+      .goto(
+        `https://duckduckgo.com/?q=site%3Alinkedin.com%2Fin+%22${name}%22+AND+%22${place}%22&t=h_&ia=web`
+      )
       // .type("#search_form_input_homepage", `${name}`)
       // .click("#search_button_homepage")
       .wait(".results--main")
@@ -312,18 +324,18 @@ const GetLinkedinData = async (name,place) => {
     console.error(e);
   }
 };
-const GetLinkedinDataSecond = async (name,place) => {
+const GetLinkedinDataSecond = async (name, place) => {
   try {
     const nightmare = Nightmare({ show: true });
     let LIDATA = await nightmare
-    // .goto("https://pk.linkedin.com/")
-    // .type(".same-name-search > :nth-child(2)", "humera")
-    // .type(".same-name-search > :nth-child(3)", "farooq")
-    // .click(".submit-btn")
-    // .scrollTo(800, 0)
-    // .wait(2000)
-    // .wait(".content")
-    .goto(`https://duckduckgo.com/?q="${name}"+"${place}"&t=h_&ia=web`)
+      // .goto("https://pk.linkedin.com/")
+      // .type(".same-name-search > :nth-child(2)", "humera")
+      // .type(".same-name-search > :nth-child(3)", "farooq")
+      // .click(".submit-btn")
+      // .scrollTo(800, 0)
+      // .wait(2000)
+      // .wait(".content")
+      .goto(`https://duckduckgo.com/?q="${name}"+"${place}"&t=h_&ia=web`)
       // .type("#search_form_input_homepage", `${name}`)
       // .click("#search_button_homepage")
       .wait(".results--main")
@@ -355,67 +367,65 @@ const GetLinkedinDataSecond = async (name,place) => {
   }
 };
 
-function GivesLinkedinLinks(passedArray){
-  let linkedinLink=[];
-  if(Array.isArray(passedArray)){
-
-    passedArray.map((x,i)=>{
-      console.log("x in loop ",x.link);
+function GivesLinkedinLinks(passedArray) {
+  let linkedinLink = [];
+  if (Array.isArray(passedArray)) {
+    passedArray.map((x, i) => {
+      console.log("x in loop ", x.link);
       // checks if the link of the site if of linkedin.com/in and if it isnt repeating the same title because of language prefixes..
-     if(x.link.search("linkedin.com/in/")!=-1 && !containsTheSameTitle(x.TITLE,linkedinLink)){
-      linkedinLink.push(x);
-     }
-    })
+      if (
+        x.link.search("linkedin.com/in/") != -1 &&
+        !containsTheSameTitle(x.TITLE, linkedinLink)
+      ) {
+        linkedinLink.push(x);
+      }
+    });
   }
-  console.log("linkedin links in this search so far :P ",linkedinLink);
+  console.log("linkedin links in this search so far :P ", linkedinLink);
   return linkedinLink;
 }
 
-function containsTheSameTitle(titleToBeAdded,arrayOfNewLinkedinData){
-  let answer=false;
-  if(arrayOfNewLinkedinData.length >=1){
-
-    arrayOfNewLinkedinData.map(x=>{
-      if(x.TITLE==titleToBeAdded){
-        answer=true;
+function containsTheSameTitle(titleToBeAdded, arrayOfNewLinkedinData) {
+  let answer = false;
+  if (arrayOfNewLinkedinData.length >= 1) {
+    arrayOfNewLinkedinData.map(x => {
+      if (x.TITLE == titleToBeAdded) {
+        answer = true;
       }
-    })
+    });
     return answer;
-  }
-  else{
+  } else {
     return answer;
   }
 }
 
-function containsTheNameOfThePersonInTheLink(firstName,LastName,objectToBeTested){
+function containsTheNameOfThePersonInTheLink(
+  firstName,
+  LastName,
+  objectToBeTested
+) {
+  let nameFirst = new RegExp(firstName, "i"),
+    nameLast = new RegExp(LastName, "i");
 
-  let nameFirst=new RegExp(firstName,"i"),nameLast=new RegExp(LastName,"i");
- 
-  objectToBeTested.map(x=>{
-    if(nameFirst.test(x.TITLE) && nameLast.test(x.TITLE)  ){
-        x.revelant="likly";
-       
-        console.log("found likely link !, added to array");
+  objectToBeTested.map(x => {
+    if (nameFirst.test(x.TITLE) && nameLast.test(x.TITLE)) {
+      x.revelant = "likly";
 
-    }
-    else if(nameFirst.test(x.TITLE)  ){
-      x.revelant="maybe";
-      
-        console.log("found maybe link !, added to array");
-    }
-    else if(nameLast.test(x.TITLE)  ){
-      x.revelant="not likly";
-   
+      console.log("found likely link !, added to array");
+    } else if (nameFirst.test(x.TITLE)) {
+      x.revelant = "maybe";
+
+      console.log("found maybe link !, added to array");
+    } else if (nameLast.test(x.TITLE)) {
+      x.revelant = "not likly";
+
       console.log("found not likely link !, added to array");
-  }
-  else{
-    x.revelant="not close";
-   
-    console.log("found not close link !, added to array");
-  }
+    } else {
+      x.revelant = "not close";
 
-  })
-  
+      console.log("found not close link !, added to array");
+    }
+  });
 }
 let twitterData = async name => {
   try {
@@ -496,11 +506,11 @@ app.get("/findfb/:name", (req, res) => {
   // res.json({'message':'hello?!??!?'});
 
   request(
-   "https://api.social-searcher.com/v2/search?q=%22maheen%20siddiqui%20bahria%20university%20%22&type=link&network=facebook,&limit=100&key=09ebbbcebeb50ac5d2776448f7204eb3",
+    "https://api.social-searcher.com/v2/search?q=%22maheen%20siddiqui%20bahria%20university%20%22&type=link&network=facebook,&limit=100&key=09ebbbcebeb50ac5d2776448f7204eb3",
     // `https://duckduckgo.com/?q=site%3Alinkedin.com%2Fin+%22eric+bhatti%22+AND+%22gdg+kolachi%22&t=h_&ia=web`,
     (error, response, html) => {
       if (!error && response.statusCode == 200) {
-      console.log(response.body);
+        console.log(response.body);
         res.json("data sent" + response.body);
       }
     }
@@ -544,6 +554,6 @@ const notes = require("./app/controllers/note.controller");
 app.post("/notes", upload.single("img"), notes.create);
 require("./app/routes/note.routes")(app);
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 80;
 // listen for requests
 app.listen(port, () => console.log(`Listening on port ${port}`));
