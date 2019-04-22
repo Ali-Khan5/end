@@ -13,11 +13,8 @@ const cheerio = require("cheerio");
 var rp = require("request-promise");
 var Nightmare = require("nightmare");
 var nightmare = Nightmare({ show: false });
-//
 
-var jquery = require("jquery");
-//
-const cors = require('cors');
+const cors = require("cors");
 const express = require("express");
 const bodyParser = require("body-parser");
 // create express app
@@ -54,15 +51,57 @@ mongoose
 
 // define a simple route
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to Article application." });
+  res.json({ message: "Welcome to Social Finder application." });
 });
 //linkdin
-app.get("/fiind/:name&:workEducation", async (req, res) => {
-  //  request(`https://www.linkedin.com/pub/dir/humera/farooq`,
+app.get("/find/:name&:workEducation", async (req, res) => {
+//  gets everything
 
   let a = await getResult(req.params.name, req.params.workEducation);
   res.send(a);
 });
+app.get("/instafind/:name", async (req, res) => {
+  // gets only instagram data
+  let search = { fb: false, insta: true, linkedin: false, twitter: false };
+  let a = await getOneResult(req.params.name, "none", search);
+  res.send(a);
+});
+app.get("/twitterfind/:name", async (req, res) => {
+  // gets only twitter data
+  let search = { fb: false, insta: false, linkedin: false, twitter: true };
+  let a = await getOneResult(req.params.name, "none", search);
+  res.send(a);
+});
+app.get("/findfb/:name", async (req, res) => {
+  // gets only Fb Data
+  let search = { fb: true, insta: false, linkedin: false, twitter: false };
+  let a = await getOneResult(req.params.name, "none", search);
+  res.send(a);
+});
+app.get("/findlinkedin/:name&:workEducation", async (req, res) => {
+  // gets only linkedin data
+  let search = { fb: false, insta: false, linkedin: true, twitter: false };
+
+  let a = await getOneResult(req.params.name, req.params.workEducation, search);
+  res.send(a);
+});
+app.get(
+  "/finding/:name&:workEducation/:fb&:twitter&:link&:insta",
+  async (req, res) => {
+    // gets only 2 or more things
+
+    let a = await getSomeResult(
+      req.params.name,
+      req.params.workEducation,
+      req.params.fb,
+      req.params.twitter,
+      req.params.link,
+      req.params.insta
+    );
+    res.send(a);
+  }
+);
+
 let fbdata = "";
 const GetFbData = async name => {
   try {
@@ -70,8 +109,8 @@ const GetFbData = async name => {
     let fbDATA = await nightmare
       .goto(`https://en-gb.facebook.com/public/${name}`)
       .scrollTo(1300, 0)
-      .wait(2000)
-      .wait("._4-u2._58b7._4-u8")
+      .wait(4000)
+      // .wait("._4-u2._58b7._4-u8")
       .evaluate(() => {
         //
         let DATA = [];
@@ -82,8 +121,6 @@ const GetFbData = async name => {
         ) {
           DATA.push({
             TITLE: document.getElementsByClassName("_32mo")[i].innerText,
-            // Description: document.getElementsByClassName("result__snippet")[i]
-            //   .innerText,
             link: document
               .getElementsByClassName("_32mo")
               [i].getAttribute("href"),
@@ -107,27 +144,7 @@ nightmare = Nightmare({
   show: true
 });
 
-async function run() {
-  let abc = "a";
-  try {
-    abc = await nightmare
-      .goto("https://duckduckgo.com")
-      .type("#search_form_input_homepage", "github nightmare")
-      .click("#search_button_homepage")
-      .wait("#r1-0 a.result__a")
-      .evaluate(() => {
-        return document.querySelector("#r1-0 a.result__a").href;
-      });
-
-    //queue and end the Nightmare instance along with the Electron instance it wraps
-    await nightmare.end();
-    console.log(abc, "232");
-    return abc;
-  } catch (e) {
-    console.log(e);
-  }
-}
-async function getResult(name, workEducation) {
+async function getResult(name, workEducation, TobeSearched) {
   // let res = run();
   let resFb = GetFbData(name);
   let resTwitter = twitterData(name);
@@ -135,9 +152,6 @@ async function getResult(name, workEducation) {
   let resLinkedin = GetLinkedinData(name, workEducation);
   let resLinkedinAgain = GetLinkedinDataSecond(name, workEducation);
   let obj = {};
-  // console.log("geee",  res, "fb", await resFb);
-  // obj.link = await res;
-  // obj.insta=await resInstagram;
   obj.fb = await resFb;
   obj.tweet = await resTwitter;
   obj.insta = await resInstagram;
@@ -156,47 +170,74 @@ async function getResult(name, workEducation) {
   );
   return obj;
 }
-
-const GetWebData = async name => {
-  console.log("runing nightmare");
-  const nightmare = Nightmare({ show: true });
-  try {
-    await nightmare
-      .goto(
-        "https://duckduckgo.com/?q=site%3Alinkedin.com%2Fin+%22eric+bhatti%22+AND+%22gdg+kolachi%22&t=h_&ia=web"
-      )
-      // .type("#search_form_input_homepage", `${name}`)
-      // .click("#search_button_homepage")
-      .wait(".results--main")
-      .evaluate(() => {
-        //
-        let DATA = [];
-        for (
-          var i = 0;
-          i < document.getElementsByClassName("result__snippet").length;
-          i++
-        ) {
-          DATA.push({
-            TITLE: document.getElementsByClassName("result__title")[i]
-              .innerText,
-            Description: document.getElementsByClassName("result__snippet")[i]
-              .innerText,
-            link: document
-              .getElementsByClassName("result__url")
-              [i].getAttribute("href")
-          });
-        }
-        return DATA;
-      })
-      .end()
-      .then(data => {
-        console.log(data);
-        return data;
-      });
-  } catch (e) {
-    console.error(e);
+async function getOneResult(name, workEducation, TobeSearched) {
+  // let res = run();
+  // {fb:false,insta:false,linkedin:true,twitter:false};
+  let obj = {};
+  if (TobeSearched.fb) {
+    let resFb = GetFbData(name);
+    obj.fb = await resFb;
+  } else if (TobeSearched.insta) {
+    let resInstagram = InstagramData(name);
+    obj.insta = await resInstagram;
+  } else if (TobeSearched.linkedin) {
+    let resLinkedin = GetLinkedinData(name, workEducation);
+    let resLinkedinAgain = GetLinkedinDataSecond(name, workEducation);
+    obj.linkdinsecond = await resLinkedinAgain;
+    obj.linkedin = await resLinkedin;
+    obj.myLinks = GivesLinkedinLinks(await resLinkedinAgain);
+    obj.myLinkstwo = GivesLinkedinLinks(await resLinkedin);
+    let firstName = name.split(" ");
+    let lastname = name.split(" ");
+    containsTheNameOfThePersonInTheLink(firstName[0], lastname[1], obj.myLinks);
+    containsTheNameOfThePersonInTheLink(
+      firstName[0],
+      lastname[1],
+      obj.myLinkstwo
+    );
+  } else if (TobeSearched.twitter) {
+    let resTwitter = twitterData(name);
+    obj.tweet = await resTwitter;
   }
-};
+
+  // console.log("obj", obj);
+
+  return obj;
+}
+async function getSomeResult(name, workEducation, FB,TW,LI,IG) {
+  // TW=twitter,LI=linkedin,IG=instagram
+  let obj = {};
+  if (FB) {
+    let resFb = GetFbData(name);
+    obj.fb = await resFb;
+  }  if (IG) {
+    let resInstagram = InstagramData(name);
+    obj.insta = await resInstagram;
+  }  if (LI) {
+    let resLinkedin = GetLinkedinData(name, workEducation);
+    let resLinkedinAgain = GetLinkedinDataSecond(name, workEducation);
+    obj.linkdinsecond = await resLinkedinAgain;
+    obj.linkedin = await resLinkedin;
+    obj.myLinks = GivesLinkedinLinks(await resLinkedinAgain);
+    obj.myLinkstwo = GivesLinkedinLinks(await resLinkedin);
+    let firstName = name.split(" ");
+    let lastname = name.split(" ");
+    containsTheNameOfThePersonInTheLink(firstName[0], lastname[1], obj.myLinks);
+    containsTheNameOfThePersonInTheLink(
+      firstName[0],
+      lastname[1],
+      obj.myLinkstwo
+    );
+  }  if (TW) {
+    let resTwitter = twitterData(name);
+    obj.tweet = await resTwitter;
+  }
+
+  // console.log("obj", obj);
+
+  return obj;
+}
+
 //instagram
 let InstagramData = async name => {
   try {
@@ -251,34 +292,6 @@ let InstagramData = async name => {
     console.log(e);
   }
 };
-
-app.get("/find/:name", (req, res) => {
-  console.log("i am runing the server lol from a folder before");
-  console.log("heuheuhuhehue");
-
-  console.log("runing nightmare");
-  const nightmare = Nightmare({ show: true });
-  try {
-    nightmare
-      .goto("https://pk.linkedin.com/")
-      .type(".same-name-search > :nth-child(2)", "humera")
-      .type(".same-name-search > :nth-child(3)", "farooq")
-      .click(".submit-btn")
-      .scrollTo(800, 0)
-      .wait(2000)
-      .wait(".content")
-
-      .end()
-      .then(function(result) {
-        console.log(result);
-      })
-      .catch(function(error) {
-        console.error("Error:", error);
-      });
-  } catch (e) {
-    console.error(e);
-  }
-});
 
 const GetLinkedinData = async (name, place) => {
   try {
