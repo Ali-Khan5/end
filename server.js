@@ -427,6 +427,7 @@ function containsTheNameOfThePersonInTheLink(
     }
   });
 }
+
 let twitterData = async name => {
   try {
     let value = "1";
