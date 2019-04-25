@@ -105,20 +105,20 @@ app.get(
 let fbdata = "";
 const GetFbData = async name => {
   try {
+    // opens nightmare
     const nightmare = Nightmare({ show: true });
     let fbDATA = await nightmare
+    // await keyword is used to make asynchronous request 
       .goto(`https://en-gb.facebook.com/public/${name}`)
+      // goes to the url in the string 
       .scrollTo(1300, 0)
+      // scroll down to generate more result 
       .wait(4000)
-      // .wait("._4-u2._58b7._4-u8")
+      // waits 4 sec and then finish operation 
       .evaluate(() => {
-        //
+        // all the html code of the page is stored here 
         let DATA = [];
-        for (
-          var i = 0;
-          i < document.getElementsByClassName("_4p2o").length;
-          i++
-        ) {
+        for (var i = 0; i < document.getElementsByClassName("_4p2o").length; i++) {
           DATA.push({
             TITLE: document.getElementsByClassName("_32mo")[i].innerText,
             link: document
@@ -130,11 +130,13 @@ const GetFbData = async name => {
             details: document.getElementsByClassName("_pac")[i].innerText
           });
         }
+        // we then, one of one using css classes pick the html elements and extract the text in inside the  tags
         return DATA;
       });
     await nightmare.end();
-    console.log(fbDATA, "188");
+    // finishes extraction 
     return fbDATA;
+    // returns fb payload 
   } catch (e) {
     console.error(e);
   }
@@ -242,6 +244,7 @@ async function getSomeResult(name, workEducation, FB,TW,LI,IG) {
 let InstagramData = async name => {
   try {
     let value = "1";
+    // goes to the given URL and returns the HTML of that page 
     var options = {
       uri: `http://gramuser.com/search/${name}`,
       transform: function(body) {
@@ -250,16 +253,21 @@ let InstagramData = async name => {
     };
     value = rp(options)
       .then($ => {
-        // const $ = cheerio.load(html);
-        const cardsData = $("a.timg div");
+        // this picks data inside the html element
+        const DatafromtheDomTree=$("td div");
+
+        let arrayOfResult= [];
+        DatafromtheDomTree.each((i, name) => {
+          arrayOfResult.push($(name).text());
+        })
         // const screenName = $(".ProfileCard-screenname");
-        let arr3 = [];
-        cardsData.each((i, name) => {
-          arr3.push($(name).text());
-        });
+       
+        // iterating all the text into a array of raw results
+     
 
         const imgs = $("a.timg");
         let arrayOfImages = [];
+        // iterating all the images into a array of raw results
         imgs.each((i, images) => {
           arrayOfImages.push(
             $(images)
@@ -267,20 +275,32 @@ let InstagramData = async name => {
               .attr("src")
           );
         });
-        let count = 0;
-        let ResultArray = [];
-        arr3.map((x, i) => {
-          if (x == "") {
-            ResultArray.push({
-              username: arr3[i - 3],
-              Fullname: arr3[i - 2],
-              followers: arr3[i - 1],
-              imgLink: arrayOfImages[count]
-            });
-            count++;
-          }
-        });
-        console.log("res soo far", arrayOfImages);
+       
+     
+      
+      //  arrayOfResult
+      for(let i=0;i<arrayOfResult.length;i++){
+        if(arrayOfResult[i]=="" || arrayOfResult[i].search("\n") != -1 ){
+          arrayOfResult.splice(i,1);
+
+        }
+      }
+
+     
+      
+        // finallying structuring our two arrays of into one single array of objects
+        let ResultArray=[],k=0,l=0;
+        for(;k<arrayOfResult.length;)
+        {
+          ResultArray.push({
+            username: arrayOfResult[k],
+            Fullname: arrayOfResult[k+1],
+            followers: arrayOfResult[k+2],
+            imgLink: arrayOfImages[l]
+          })
+          k=k+3;
+          l++;
+        }
         return ResultArray;
       })
       .catch(e => {
@@ -444,31 +464,33 @@ function containsTheNameOfThePersonInTheLink(
 let twitterData = async name => {
   try {
     let value = "1";
+    
     var options = {
       uri: `https://twitter.com/search?f=users&q=${name}`,
       transform: function(body) {
         return cheerio.load(body);
       }
     };
+    // goes to the url and fetches the html code of the page
     value = rp(options)
       .then($ => {
-        // const $ = cheerio.load(html);
-        const cards = $(
+    
+        const ResultfromDomtree = $(
           ".fullname.ProfileNameTruncated-link.u-textInheritColor.js-nav"
         );
         const screenName = $(".ProfileCard-screenname");
-        let arr3 = [];
-        cards.each((i, name) => {
-          arr3.push(
+        let ArrayofText = [];
+        ResultfromDomtree.each((i, name) => {
+          ArrayofText.push(
             $(name)
               .text()
               .replace(/\s\s+/g, "")
           );
         });
         const DisplayPictures = $(".ProfileCard-avatarLink.js-nav.js-tooltip");
-        let arr2 = [];
+        let ArrayofImagesSrc = [];
         DisplayPictures.map((i, pic) => {
-          arr2.push(
+          ArrayofImagesSrc.push(
             $(pic)
               .find("img")
               .attr("src")
@@ -482,25 +504,24 @@ let twitterData = async name => {
               .replace(/\s\s+/g, "")
           );
         });
-        let arr = [];
+        let ArrayOfUserDescription = [];
         const Bio = $(".ProfileCard-bio.u-dir");
         //this is what we want
         Bio.each((i, bioo) => {
-          arr.push($(bioo).text());
+          ArrayOfUserDescription.push($(bioo).text());
         });
 
         let FinalArray = [];
 
-        for (let i = 0; i < arr2.length; i++) {
+        for (let i = 0; i < ArrayofImagesSrc.length; i++) {
           let tempObj = {
-            Fullname: arr3[i],
+            Fullname: ArrayofText[i],
             screenName: screenNameArray[i],
-            Bios: arr[i],
-            DisplayPictures: arr2[i]
+            Bios: ArrayOfUserDescription[i],
+            DisplayPictures: ArrayofImagesSrc[i]
           };
           FinalArray.push(tempObj);
         }
-        // console.log('result 399',result);
         return FinalArray;
       })
       .catch(e => {
