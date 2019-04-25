@@ -257,8 +257,10 @@ let InstagramData = async name => {
         const DatafromtheDomTree=$("td div");
 
         let arrayOfResult= [];
+        let optionn=[];
         DatafromtheDomTree.each((i, name) => {
           arrayOfResult.push($(name).text());
+          optionn.push($(name).text());
         })
         // const screenName = $(".ProfileCard-screenname");
        
@@ -277,14 +279,28 @@ let InstagramData = async name => {
         });
        
      
-      
+      // console.log(arrayOfResult);
+     
+   
+
       //  arrayOfResult
       for(let i=0;i<arrayOfResult.length;i++){
         if(arrayOfResult[i]=="" || arrayOfResult[i].search("\n") != -1 ){
           arrayOfResult.splice(i,1);
 
         }
+        if( arrayOfResult[i].search("@") != -1 && arrayOfResult[i+1].search("followers") != -1  ){
+              arrayOfResult.splice(i+1, 0, "none");
+    
+            }
       }
+      // for(let i=1;i<arrayOfResult.length;i++){
+      //   if( arrayOfResult[i].search("followers") != -1 && arrayOfResult[i-1].search("@") != -1 ){
+      //     arrayOfResult.splice(i-1, 0, "none");
+
+      //   }
+      // }
+
 
      
       
