@@ -265,7 +265,7 @@ let InstagramData = async name => {
         // const screenName = $(".ProfileCard-screenname");
        
         // iterating all the text into a array of raw results
-     
+     console.log(optionn);
 
         const imgs = $("a.timg");
         let arrayOfImages = [];
@@ -289,10 +289,13 @@ let InstagramData = async name => {
           arrayOfResult.splice(i,1);
 
         }
-        if( arrayOfResult[i].search("@") != -1 && arrayOfResult[i+1].search("followers") != -1  ){
-              arrayOfResult.splice(i+1, 0, "none");
-    
-            }
+        if(arrayOfResult[i] && arrayOfResult[i+1]){
+          if( arrayOfResult[i].search("@") != -1 && arrayOfResult[i+1].search("followers") != -1  ){
+            arrayOfResult.splice(i+1, 0, "none");
+  
+          }
+        }
+       
       }
       // for(let i=1;i<arrayOfResult.length;i++){
       //   if( arrayOfResult[i].search("followers") != -1 && arrayOfResult[i-1].search("@") != -1 ){
