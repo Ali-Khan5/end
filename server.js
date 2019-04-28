@@ -85,8 +85,9 @@ app.get("/findlinkedin/:name&:workEducation", async (req, res) => {
   let a = await getOneResult(req.params.name, req.params.workEducation, search);
   res.send(a);
 });
+
 app.get(
-  "/finding/:name&:workEducation/:fb&:twitter&:link&:insta",
+  "/finding/:name&:workEducation/:fb&:twitter&:insta&:link",
   async (req, res) => {
     // gets only 2 or more things
 
@@ -95,8 +96,8 @@ app.get(
       req.params.workEducation,
       req.params.fb,
       req.params.twitter,
-      req.params.link,
-      req.params.insta
+	  req.params.insta,
+      req.params.link
     );
     res.send(a);
   }
@@ -206,16 +207,19 @@ async function getOneResult(name, workEducation, TobeSearched) {
 
   return obj;
 }
-async function getSomeResult(name, workEducation, FB,TW,LI,IG) {
+async function getSomeResult(name, workEducation,FB,TW,IG,LI) {
   // TW=twitter,LI=linkedin,IG=instagram
+  console.log("valuessss from 212",FB,TW,IG,LI,typeof FB,typeof TW)
   let obj = {};
-  if (FB) {
+  if (FB === "true" ) {
     let resFb = GetFbData(name);
     obj.fb = await resFb;
-  }  if (IG) {
+  } 
+    if (IG  === "true" ) {
     let resInstagram = InstagramData(name);
     obj.insta = await resInstagram;
-  }  if (LI) {
+  }  
+    if (LI  === "true" ) {
     let resLinkedin = GetLinkedinData(name, workEducation);
     let resLinkedinAgain = GetLinkedinDataSecond(name, workEducation);
     obj.linkdinsecond = await resLinkedinAgain;
@@ -230,7 +234,8 @@ async function getSomeResult(name, workEducation, FB,TW,LI,IG) {
       lastname[1],
       obj.myLinkstwo
     );
-  }  if (TW) {
+  }  
+    if (TW === "true" ) {
     let resTwitter = twitterData(name);
     obj.tweet = await resTwitter;
   }
@@ -334,23 +339,17 @@ let InstagramData = async name => {
 
 const GetLinkedinData = async (name, place) => {
   try {
+    // create an instance of nightmare
     const nightmare = Nightmare({ show: true });
+    // goes to the given URL
     let LIDATA = await nightmare
-      // .goto("https://pk.linkedin.com/")
-      // .type(".same-name-search > :nth-child(2)", "humera")
-      // .type(".same-name-search > :nth-child(3)", "farooq")
-      // .click(".submit-btn")
-      // .scrollTo(800, 0)
-      // .wait(2000)
-      // .wait(".content")
       .goto(
         `https://duckduckgo.com/?q=site%3Alinkedin.com%2Fin+%22${name}%22+AND+%22${place}%22&t=h_&ia=web`
       )
-      // .type("#search_form_input_homepage", `${name}`)
-      // .click("#search_button_homepage")
+      // wait for the .result css class to show which indicated the page has been rendered 
       .wait(".results--main")
       .evaluate(() => {
-        //
+        //iterates through html pages and adds relevant data to our array of object
         let DATA = [];
         for (
           var i = 0;
@@ -424,7 +423,8 @@ function GivesLinkedinLinks(passedArray) {
   if (Array.isArray(passedArray)) {
     passedArray.map((x, i) => {
       console.log("x in loop ", x.link);
-      // checks if the link of the site if of linkedin.com/in and if it isnt repeating the same title because of language prefixes..
+      // checks if the link of the site if of linkedin.com/in and if it isnt repeating the same title 
+      // because of language prefixes..
       if (
         x.link.search("linkedin.com/in/") != -1 &&
         !containsTheSameTitle(x.TITLE, linkedinLink)
@@ -433,10 +433,8 @@ function GivesLinkedinLinks(passedArray) {
       }
     });
   }
-  console.log("linkedin links in this search so far :P ", linkedinLink);
   return linkedinLink;
 }
-
 function containsTheSameTitle(titleToBeAdded, arrayOfNewLinkedinData) {
   let answer = false;
   if (arrayOfNewLinkedinData.length >= 1) {
